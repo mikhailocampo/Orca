@@ -4,7 +4,6 @@
         {"code": "BOPL", "description": "Band Placement" },
         {"code": "BRPL", "description": "Bracket Placement" },
         {"code": "BRKT", "description": "Bracket Check" },
-        {"code": "WIRE", "description": "Wire" },
         {"code": "SEP", "description": "Separator Placement" },
         {"code": "INVS", "description": "Invisalign Start"},
         {"code": "INVC", "description": "Invisalign Check"},
@@ -24,8 +23,8 @@
         {"code": "CANC", "name": "Cancelled" }
     ],
     "staff_types": [
-        {"code": "ORTH", "name": "Orthodontist" },
-        {"code": "RECP", "name": "Receptionist" },
-        {"code": "ASST", "name": "Assistant" }
+        {"code": "ORTH", "description": "Orthodontist" },
+        {"code": "RECP", "description": "Receptionist" },
+        {"code": "ASST", "description": "Assistant" }
     ]
 }

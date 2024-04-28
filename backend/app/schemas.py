@@ -5,7 +5,7 @@ from config import (
     validate_appointment_type_code,
     validate_appointment_type_description,
     validate_staff_type_code,
-    validate_staff_type_name,
+    validate_staff_description,
     validate_status_type_code,
     validate_status_type_name,
     )
@@ -35,14 +35,14 @@ class AppointmentTypeBase(BaseModel):
 
 class StaffTypeBase(BaseModel):
     code: str
-    name: str
+    description: str
     
     @field_validator('code')
     def validate_code(cls, v):
         return validate_staff_type_code(v)
-    @field_validator('name')
-    def validate_name(cls, v):
-        return validate_staff_type_name(v)
+    @field_validator('description')
+    def validate_description(cls, v):
+        return validate_staff_description(v)
 
 # Patient
 class PatientBase(BaseModel):
@@ -56,8 +56,8 @@ class PatientBase(BaseModel):
 
 # Staff
 class StaffBase(BaseModel):
-    staff_id: int
     name: str
+    staff_type_id: int
 
 class AppointmentBase(BaseModel):
     date: date
@@ -79,6 +79,3 @@ class Appointment(AppointmentBase):
         from_attributes = True
 
 # Response Models
-class StatusResponse(BaseModel):
-    status: StatusBase
-    message: str

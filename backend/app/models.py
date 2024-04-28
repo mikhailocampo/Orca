@@ -18,6 +18,14 @@ class AppointmentType(Base):
 
     appointments = relationship("Appointment", back_populates="appointment_type")
 
+class StaffType(Base):
+    __tablename__ = "staff_types"
+    staff_type_id = Column(Integer, primary_key=True)
+    code = Column(String, unique=True, nullable=False, index=True)
+    description = Column(String, nullable=False)
+
+    staff = relationship("Staff", back_populates="staff_type")
+
 class Patient(Base):
     __tablename__ = "patients"
     patient_id = Column(Integer, primary_key=True)
@@ -34,9 +42,10 @@ class Patient(Base):
 class Staff(Base):
     __tablename__ = "staff"
     staff_id = Column(Integer, primary_key=True)
-    code = Column(String, unique=True, nullable=False, index=True)
+    staff_type_id = Column(Integer, ForeignKey('staff_types.staff_type_id'))
     name = Column(String)
 
+    staff_type = relationship("StaffType", back_populates="staff")
     appointments = relationship("Appointment", back_populates="staff")
 
 class Appointment(Base):
