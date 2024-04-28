@@ -50,8 +50,8 @@ class Staff(Base):
 class Appointment(Base):
     __tablename__ = 'appointment_ledger'
     appointment_id = Column(Integer, primary_key=True)
-    date = Column(Date, nullable=False)
-    time = Column(Time, nullable=False)
+    appt_date = Column(Date, nullable=False)
+    appt_time = Column(Time, nullable=False)
     patient_id = Column(Integer, ForeignKey('patients.patient_id'))
     staff_id = Column(Integer, ForeignKey('staff.staff_id'))
     chair_number = Column(Integer)

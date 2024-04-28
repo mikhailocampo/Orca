@@ -60,13 +60,23 @@ class StaffBase(BaseModel):
 
 # Appointments
 class AppointmentBase(BaseModel):
-    date: date
-    time: time
+    appt_date: date
+    appt_time: time
     patient_id: int
     staff_id: int
     chair_number: int
     appointment_type_id: int
     status_id: int
+    notes: Optional[str] = None
+
+class AppointmentUpdate(AppointmentBase):
+    appt_date: Optional[date] = None
+    appt_time: Optional[time] = None
+    patient_id: Optional[int] = None
+    staff_id: Optional[int] = None
+    chair_number: Optional[int] = None
+    appointment_type_id: Optional[int] = None
+    status_id: Optional[int] = None
     notes: Optional[str] = None
 
 # Response Models

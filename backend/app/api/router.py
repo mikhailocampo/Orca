@@ -78,10 +78,14 @@ def create_appointment(appointment: schemas.AppointmentBase, db: Session = Depen
     if not db.query(models.Status).filter(models.Status.status_id == appointment.status_id).first():
         raise HTTPException(status_code=404, detail="Status not found")
     
+    # Check if chair number is valid
+    if appointment.chair_number < 1:
+        raise HTTPException(status_code=400, detail="Chair number must be greater than 0")
+    
     # Create new appointment record if all checks pass
     new_appointment = models.Appointment(
-        date=appointment.date,
-        time=appointment.time,
+        appt_date=appointment.appt_date,
+        appt_time=appointment.appt_time,
         patient_id=appointment.patient_id,
         staff_id=appointment.staff_id,
         chair_number=appointment.chair_number,
@@ -93,3 +97,76 @@ def create_appointment(appointment: schemas.AppointmentBase, db: Session = Depen
     db.commit()
     db.refresh(new_appointment)
     return new_appointment
+
+@router.get("/appointments/")
+def get_appointments(db: Session = Depends(get_db)):
+    return db.query(models.Appointment).all()
+
+@router.get("/appointments/{appointment_id}")
+def get_appointment(appointment_id: int, db: Session = Depends(get_db)):
+    appointment = db.query(models.Appointment).filter(models.Appointment.appointment_id == appointment_id).first()
+    if appointment:
+        return appointment
+    raise HTTPException(status_code=404, detail="Appointment not found")
+
+@router.get("/appointments/patient/{patient_id}")
+def get_appointments_by_patient(patient_id: int, db: Session = Depends(get_db)):
+    appointments = db.query(models.Appointment).filter(models.Appointment.patient_id == patient_id).all()
+    if not appointments:
+        raise HTTPException(status_code=404, detail="No appointments found for the specified patient")
+    return appointments
+
+@router.get("/appointments/date-range/")
+def get_appointments_by_date_range(start_date: str, end_date: str, db: Session = Depends(get_db)):
+    appointments = db.query(models.Appointment).filter(models.Appointment.appt_date.between(start_date, end_date)).all()
+    if not appointments:
+        raise HTTPException(status_code=404, detail="No appointments found within the specified date range")
+    return appointments
+
+@router.put("/appointments/{appointment_id}")
+def update_appointment(appointment_id: int, appointment: schemas.AppointmentUpdate, db: Session = Depends(get_db)):
+    db_appointment = db.query(models.Appointment).filter(models.Appointment.appointment_id == appointment_id).first()
+    if not db_appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    # Check if patient exists
+    if appointment.patient_id:
+        if not db.query(models.Patient).filter(models.Patient.patient_id == appointment.patient_id).first():
+            raise HTTPException(status_code=404, detail="Patient not found")
+    
+    # Check if staff exists
+    if appointment.staff_id:
+        if not db.query(models.Staff).filter(models.Staff.staff_id == appointment.staff_id).first():
+            raise HTTPException(status_code=404, detail="Staff not found")
+    
+    # Check if appointment type exists
+    if appointment.appointment_type_id:
+        if not db.query(models.AppointmentType).filter(models.AppointmentType.type_id == appointment.appointment_type_id).first():
+            raise HTTPException(status_code=404, detail="Appointment type not found")
+    
+    # Check if status exists
+    if appointment.status_id:
+        if not db.query(models.Status).filter(models.Status.status_id == appointment.status_id).first():
+            raise HTTPException(status_code=404, detail="Status not found")
+    
+    # Upappt_date appointment record if all checks pass
+    if appointment.appt_date:
+        db_appointment.appt_date = appointment.appt_date
+    if appointment.appt_time:
+        db_appointment.appt_time = appointment.appt_time
+    if appointment.patient_id:
+        db_appointment.patient_id = appointment.patient_id
+    if appointment.staff_id:
+        db_appointment.staff_id = appointment.staff_id
+    if appointment.chair_number:
+        db_appointment.chair_number = appointment.chair_number
+    if appointment.appointment_type_id:
+        db_appointment.appointment_type_id = appointment.appointment_type_id
+    if appointment.status_id:
+        db_appointment.status_id = appointment.status_id
+    if appointment.notes:
+        db_appointment.notes = appointment.notes
+    
+    db.commit()
+    db.refresh(db_appointment)
+    return db_appointment
