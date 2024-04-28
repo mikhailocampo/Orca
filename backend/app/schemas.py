@@ -10,7 +10,7 @@ from config import (
     validate_status_type_name,
     )
 
-# Def with Config JSON
+# Primitives Config JSON
 class StatusBase(BaseModel):
     code: str
     name: str
@@ -52,30 +52,21 @@ class PatientBase(BaseModel):
     address: str
     birthdate: date
     gender: str
-    occupation: str
 
 # Staff
 class StaffBase(BaseModel):
     name: str
     staff_type_id: int
 
+# Appointments
 class AppointmentBase(BaseModel):
     date: date
     time: time
     patient_id: int
     staff_id: int
     chair_number: int
-    appointment_type: AppointmentTypeBase
-    status: StatusBase
+    appointment_type_id: int
+    status_id: int
     notes: Optional[str] = None
-    
-class AppointmentCreate(AppointmentBase):
-    pass
-
-class Appointment(AppointmentBase):
-    id: int
-
-    class Config:
-        from_attributes = True
 
 # Response Models

@@ -29,13 +29,12 @@ class StaffType(Base):
 class Patient(Base):
     __tablename__ = "patients"
     patient_id = Column(Integer, primary_key=True)
-    name = Column(String)
+    name = Column(String, nullable=False)
     email = Column(String)
     phone = Column(String)
     address = Column(String)
     birthdate = Column(Date)
     gender = Column(String)
-    occupation = Column(String)
 
     appointments = relationship("Appointment", back_populates="patient")
 
@@ -51,8 +50,8 @@ class Staff(Base):
 class Appointment(Base):
     __tablename__ = 'appointment_ledger'
     appointment_id = Column(Integer, primary_key=True)
-    date = Column(Date)
-    time = Column(Time)
+    date = Column(Date, nullable=False)
+    time = Column(Time, nullable=False)
     patient_id = Column(Integer, ForeignKey('patients.patient_id'))
     staff_id = Column(Integer, ForeignKey('staff.staff_id'))
     chair_number = Column(Integer)
@@ -64,3 +63,13 @@ class Appointment(Base):
     appointment_type = relationship("AppointmentType", back_populates="appointments")
     status = relationship("Status", back_populates="appointments")
     staff = relationship("Staff", back_populates="appointments")
+
+    class Config:
+        json_encoders = {
+            Date: lambda v: v.strftime('%Y-%m-%d'),
+            Time: lambda v: v.strftime('%H:%M:%S')
+        }
+        json_decoders = {
+            Date: lambda v: v.strftime('%Y-%m-%d'),
+            Time: lambda v: v.strftime('%H:%M:%S')
+        }
