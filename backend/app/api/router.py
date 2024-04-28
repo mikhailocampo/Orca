@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from datetime import datetime
 from .. import schemas, models
 from ..database import get_db
 
@@ -61,7 +62,7 @@ def create_patient(patient: schemas.PatientBase, db: Session = Depends(get_db)):
     return {"patient": new_patient, "message": "Patient created successfully"}
 
 @router.post("/appointments/")
-def create_appointment(appointment: schemas.AppointmentBase, db: Session = Depends(get_db)):
+def create_appointment(appointment: schemas.AppointmentBase, created_by: int, db: Session = Depends(get_db)):
     # Check if patient exists
     if not db.query(models.Patient).filter(models.Patient.patient_id == appointment.patient_id).first():
         raise HTTPException(status_code=404, detail="Patient not found")
@@ -89,14 +90,31 @@ def create_appointment(appointment: schemas.AppointmentBase, db: Session = Depen
         patient_id=appointment.patient_id,
         staff_id=appointment.staff_id,
         chair_number=appointment.chair_number,
-        appointment_type_id=appointment.appointment_type_id,
-        status_id=appointment.status_id,
+        appointment_type_id=appointment.appointment_type_id, # Unconfirmed by default
+        status_id=1,
         notes=appointment.notes
     )
     db.add(new_appointment)
     db.commit()
     db.refresh(new_appointment)
-    return new_appointment
+    
+    # Log the creation in the appointment_ledger
+    ledger_entry = models.AppointmentLedger(
+        appointment_id=new_appointment.appointment_id,
+        appointment_type_id=new_appointment.appointment_type_id,
+        status_id=new_appointment.status_id,
+        patient_id=new_appointment.patient_id,
+        staff_id=new_appointment.staff_id,
+        modified_by=created_by,
+        appt_date=new_appointment.appt_date,
+        appt_time=new_appointment.appt_time,
+        chair_number=new_appointment.chair_number,
+        modified_at=datetime.now()
+    )
+    db.add(ledger_entry)
+    db.commit()
+    
+    return {"appointment": new_appointment, "ledger_entry": ledger_entry}
 
 @router.get("/appointments/")
 def get_appointments(db: Session = Depends(get_db)):
@@ -124,49 +142,47 @@ def get_appointments_by_date_range(start_date: str, end_date: str, db: Session =
     return appointments
 
 @router.put("/appointments/{appointment_id}")
-def update_appointment(appointment_id: int, appointment: schemas.AppointmentUpdate, db: Session = Depends(get_db)):
-    db_appointment = db.query(models.Appointment).filter(models.Appointment.appointment_id == appointment_id).first()
-    if not db_appointment:
+def update_appointment(appointment_id: int, modified_by: int, update_data: schemas.AppointmentUpdate, db: Session = Depends(get_db)):
+    appointment = db.query(models.Appointment).filter(models.Appointment.appointment_id == appointment_id).first()
+    if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
     
-    # Check if patient exists
-    if appointment.patient_id:
-        if not db.query(models.Patient).filter(models.Patient.patient_id == appointment.patient_id).first():
-            raise HTTPException(status_code=404, detail="Patient not found")
+    # Start Transaction
+    with db.begin_nested():
+        # Log to ledger first
+        ledger_entry = models.AppointmentLedger(
+            appointment_id=appointment.appointment_id,
+            appt_date=appointment.appt_date,
+            appt_time=appointment.appt_time,
+            patient_id=appointment.patient_id,
+            staff_id=appointment.staff_id,
+            chair_number=appointment.chair_number,
+            appointment_type_id=appointment.appointment_type_id,
+            status_id=appointment.status_id,
+            notes=appointment.notes,
+            modified_at=datetime.now(),
+            modified_by=modified_by
+        )
+        db.add(ledger_entry)
+        
+        # Update appointment record
+        if update_data.appt_date:
+            appointment.appt_date = update_data.appt_date
+        if update_data.appt_time:
+            appointment.appt_time = update_data.appt_time
+        if update_data.patient_id:
+            appointment.patient_id = update_data.patient_id
+        if update_data.staff_id:
+            appointment.staff_id = update_data.staff_id
+        if update_data.chair_number:
+            appointment.chair_number = update_data.chair_number
+        if update_data.appointment_type_id:
+            appointment.appointment_type_id = update_data.appointment_type_id
+        if update_data.status_id:
+            appointment.status_id = update_data.status_id
+        if update_data.notes:
+            appointment.notes = update_data.notes
+        
+        db.commit()
     
-    # Check if staff exists
-    if appointment.staff_id:
-        if not db.query(models.Staff).filter(models.Staff.staff_id == appointment.staff_id).first():
-            raise HTTPException(status_code=404, detail="Staff not found")
-    
-    # Check if appointment type exists
-    if appointment.appointment_type_id:
-        if not db.query(models.AppointmentType).filter(models.AppointmentType.type_id == appointment.appointment_type_id).first():
-            raise HTTPException(status_code=404, detail="Appointment type not found")
-    
-    # Check if status exists
-    if appointment.status_id:
-        if not db.query(models.Status).filter(models.Status.status_id == appointment.status_id).first():
-            raise HTTPException(status_code=404, detail="Status not found")
-    
-    # Upappt_date appointment record if all checks pass
-    if appointment.appt_date:
-        db_appointment.appt_date = appointment.appt_date
-    if appointment.appt_time:
-        db_appointment.appt_time = appointment.appt_time
-    if appointment.patient_id:
-        db_appointment.patient_id = appointment.patient_id
-    if appointment.staff_id:
-        db_appointment.staff_id = appointment.staff_id
-    if appointment.chair_number:
-        db_appointment.chair_number = appointment.chair_number
-    if appointment.appointment_type_id:
-        db_appointment.appointment_type_id = appointment.appointment_type_id
-    if appointment.status_id:
-        db_appointment.status_id = appointment.status_id
-    if appointment.notes:
-        db_appointment.notes = appointment.notes
-    
-    db.commit()
-    db.refresh(db_appointment)
-    return db_appointment
+    return {"message": "Appointment updated successfully", "updated_appointment": appointment, "ledger_entry": ledger_entry}

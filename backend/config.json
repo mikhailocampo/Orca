@@ -17,6 +17,7 @@
         {"code": "OTHR", "description": "Other" }
     ],
     "appointment_statuses": [
+        {"code": "UNCF", "name": "Unconfirmed" },
         {"code": "CONF", "name": "Confirmed" },
         {"code": "INPR", "name": "In Progress" },
         {"code": "COMP", "name": "Complete" },

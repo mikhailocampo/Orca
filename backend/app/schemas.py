@@ -1,5 +1,5 @@
 from pydantic import BaseModel, field_validator
-from datetime import date, time
+from datetime import date, time, datetime
 from typing import Optional
 from config import (
     validate_appointment_type_code,

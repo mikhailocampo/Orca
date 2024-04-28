@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Text, Date, Time
+from sqlalchemy import Column, Integer, String, ForeignKey, Text, Date, Time, DateTime
+from datetime import datetime
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -9,6 +10,7 @@ class Status(Base):
     name = Column(String)
 
     appointments = relationship("Appointment", back_populates="status")
+    appointment_ledger = relationship("AppointmentLedger", back_populates="status")
 
 class AppointmentType(Base):
     __tablename__ = "appointment_types"
@@ -17,6 +19,7 @@ class AppointmentType(Base):
     description = Column(String, nullable=False)
 
     appointments = relationship("Appointment", back_populates="appointment_type")
+    appointment_ledger = relationship("AppointmentLedger", back_populates="appointment_type")
 
 class StaffType(Base):
     __tablename__ = "staff_types"
@@ -37,6 +40,7 @@ class Patient(Base):
     gender = Column(String)
 
     appointments = relationship("Appointment", back_populates="patient")
+    appointment_ledger = relationship("AppointmentLedger", back_populates="patient")
 
 class Staff(Base):
     __tablename__ = "staff"
@@ -45,10 +49,13 @@ class Staff(Base):
     name = Column(String)
 
     staff_type = relationship("StaffType", back_populates="staff")
-    appointments = relationship("Appointment", back_populates="staff")
+    appointments = relationship("Appointment", back_populates="staff")  # appointments this staff has scheduled    
+    assigned_appointments = relationship("AppointmentLedger", foreign_keys="[AppointmentLedger.staff_id]", back_populates="staff")
+    modified_appointments = relationship("AppointmentLedger", foreign_keys="[AppointmentLedger.modified_by]", back_populates="modifier")
+
 
 class Appointment(Base):
-    __tablename__ = 'appointment_ledger'
+    __tablename__ = 'appointments'
     appointment_id = Column(Integer, primary_key=True)
     appt_date = Column(Date, nullable=False)
     appt_time = Column(Time, nullable=False)
@@ -62,14 +69,28 @@ class Appointment(Base):
     patient = relationship("Patient", back_populates="appointments")
     appointment_type = relationship("AppointmentType", back_populates="appointments")
     status = relationship("Status", back_populates="appointments")
-    staff = relationship("Staff", back_populates="appointments")
+    staff = relationship("Staff", back_populates="appointments")  # back reference to staff
+    appointment_ledger = relationship("AppointmentLedger", back_populates="appointment")
 
-    class Config:
-        json_encoders = {
-            Date: lambda v: v.strftime('%Y-%m-%d'),
-            Time: lambda v: v.strftime('%H:%M:%S')
-        }
-        json_decoders = {
-            Date: lambda v: v.strftime('%Y-%m-%d'),
-            Time: lambda v: v.strftime('%H:%M:%S')
-        }
+
+class AppointmentLedger(Base):
+    __tablename__ = 'appointment_ledger'
+    id = Column(Integer, primary_key=True)
+    appointment_id = Column(Integer, ForeignKey('appointments.appointment_id'))
+    appointment_type_id = Column(Integer, ForeignKey('appointment_types.type_id'))
+    staff_id = Column(Integer, ForeignKey('staff.staff_id'))
+    patient_id = Column(Integer, ForeignKey('patients.patient_id'))
+    status_id = Column(Integer, ForeignKey('statuses.status_id'))
+    appt_date = Column(Date, nullable=False)
+    appt_time = Column(Time, nullable=False)
+    chair_number = Column(Integer)
+    modified_at = Column(DateTime, default=datetime.now)
+    modified_by = Column(Integer, ForeignKey('staff.staff_id'))
+    notes = Column(Text)
+    
+    appointment = relationship("Appointment", back_populates="appointment_ledger")
+    staff = relationship("Staff", foreign_keys=[staff_id], back_populates="assigned_appointments")
+    modifier = relationship("Staff", foreign_keys=[modified_by], back_populates="modified_appointments")
+    status = relationship("Status", back_populates="appointment_ledger")
+    appointment_type = relationship("AppointmentType", back_populates="appointment_ledger")
+    patient = relationship("Patient", back_populates="appointment_ledger")
