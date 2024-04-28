@@ -17,6 +17,7 @@ class AppointmentType(Base):
     type_id = Column(Integer, primary_key=True)
     code = Column(String, unique=True, nullable=False, index=True)
     description = Column(String, nullable=False)
+    default_length = Column(Integer, nullable=False)
 
     appointments = relationship("Appointment", back_populates="appointment_type")
     appointment_ledger = relationship("AppointmentLedger", back_populates="appointment_type")

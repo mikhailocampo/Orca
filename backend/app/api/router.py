@@ -8,7 +8,11 @@ router = APIRouter()
 
 @router.post("/appointment-types/")
 def create_appointment_type(appointment_type: schemas.AppointmentTypeBase, db: Session = Depends(get_db)):
-    db_appointment_type = models.AppointmentType(code=appointment_type.code, description=appointment_type.description)
+    db_appointment_type = models.AppointmentType(
+        code=appointment_type.code, 
+        description=appointment_type.description,
+        default_length=appointment_type.default_length
+    )
     db.add(db_appointment_type)
     db.commit()
     db.refresh(db_appointment_type)
@@ -83,10 +87,16 @@ def create_appointment(appointment: schemas.AppointmentBase, created_by: int, db
     if appointment.chair_number < 1:
         raise HTTPException(status_code=400, detail="Chair number must be greater than 0")
     
+    # If AppointmentBase does not have appt_length, set it to the default length of the appointment type
+    if not appointment.appt_length:
+        appointment.appt_length = db.query(models.AppointmentType).filter(models.AppointmentType.type_id == appointment.appointment_type_id).first().default_length
+        print(f"Setting appointment length to default length of appointment type: {appointment.appt_length}")
+    
     # Create new appointment record if all checks pass
     new_appointment = models.Appointment(
         appt_date=appointment.appt_date,
         appt_time=appointment.appt_time,
+        appt_length=appointment.appt_length, # Default length of the appointment type if not provided
         patient_id=appointment.patient_id,
         staff_id=appointment.staff_id,
         chair_number=appointment.chair_number,
@@ -108,13 +118,14 @@ def create_appointment(appointment: schemas.AppointmentBase, created_by: int, db
         modified_by=created_by,
         appt_date=new_appointment.appt_date,
         appt_time=new_appointment.appt_time,
+        appt_length=new_appointment.appt_length,
         chair_number=new_appointment.chair_number,
         modified_at=datetime.datetime.now()
     )
     db.add(ledger_entry)
     db.commit()
     
-    return {"appointment": new_appointment, "ledger_entry": ledger_entry}
+    return {"message": "Appointment created successfully"}
 
 @router.get("/appointments/")
 def get_appointments(db: Session = Depends(get_db)):

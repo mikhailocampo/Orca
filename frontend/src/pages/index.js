@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from 'react';
-
-const timeSlots = [
-    '9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM', '12:00 PM', '12:30 PM', 
-    '1:00 PM', '1:30 PM', '2:00 PM', '2:30 PM', '3:00 PM', '3:30 PM', '4:00 PM', '4:30 PM'
-  ];
+import generateTimeSlots from './TimeSlotGenerator';
+import AppointmentSlot from './AppointmentSlot';
   
 
 const Schedule = () => {
     const [appointments, setAppointments] = useState([]);
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10)); // sets today's date in YYYY-MM-DD
     const chairs = [1,2,3,4,5];
+    const timeSlots = generateTimeSlots('09:00', '17:00', 15);
 
     useEffect(() => {
         fetchAppointmentsForDate(date);
@@ -71,18 +69,7 @@ const Schedule = () => {
                         <tr key={time}>
                             <td>{time}</td>
                             {chairs.map(chair => {
-                                // Debugging the filter condition
-
-                                return (
-                                    <td key={`${time}-${chair}`} className="p-0 text-center">
-                                        {appointments.filter(appointment =>
-                                            formatTime(appointment.appt_time) === time &&
-                                            appointment.chair_number === chair
-                                        ).length > 0 ? (
-                                            <div className="w-full h-full bg-red-500 hover:bg-blue-500">Appointment</div>  // Added hover class for testing
-                                        ) : null}
-                                    </td>
-                                );
+                                <AppointmentSlot key={chair} appointments={appointments} time={time} chair={chair} />
                             })}
                         </tr>
                     ))}

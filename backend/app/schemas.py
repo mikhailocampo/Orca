@@ -25,6 +25,7 @@ class StatusBase(BaseModel):
 class AppointmentTypeBase(BaseModel):
     code: str
     description: str
+    default_length: int
     
     @field_validator('code')
     def validate_code(cls, v):
@@ -62,7 +63,7 @@ class StaffBase(BaseModel):
 class AppointmentBase(BaseModel):
     appt_date: date
     appt_time: time
-    appt_length: int
+    appt_length: Optional[int] = None
     patient_id: int
     staff_id: int
     chair_number: int
