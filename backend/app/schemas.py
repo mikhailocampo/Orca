@@ -1,37 +1,48 @@
-from pydantic import BaseModel
-from datetime import datetime
-from enum import Enum
+from pydantic import BaseModel, field_validator
+from datetime import date, time
 from typing import Optional
+from config import (
+    validate_appointment_type_code,
+    validate_appointment_type_description,
+    validate_staff_type_code,
+    validate_staff_type_name,
+    validate_status_type_code,
+    validate_status_type_name,
+    )
 
-# Status for Appointments
-class StatusEnum(str, Enum):
-    confirmed = 'confirmed'
-    in_progress = 'in-progress'
-    cancelled = 'cancelled'
-    completed = 'completed'
-
+# Def with Config JSON
 class StatusBase(BaseModel):
-    status: StatusEnum
+    code: str
+    name: str
     
-# Appointment Types
-class AppointmentTypeEnum(str, Enum):
-    treatment_start = 'TCST'
-    bonding = 'BOND'
-    bracket_placement = 'BRKT'
-    wire_placement = 'WIRE'
-    band_placement = 'BAND'
-    band_replacement = 'BRPL'
-    adjustment = 'ADJ'
-    debond = 'DEB'
-    band_removal = 'BRM'
-    retainer_check = 'RET'
-    consultation = 'CONS'
-    inv_check = 'INVC'
-    inv_placement = 'INVP'
-    inv_adjustment = 'INVA'
-    inv_removal = 'INVR'
-    emergency = 'EMER'
-    other = 'OTHER'
+    @field_validator('code')
+    def validate_code(cls, v):
+        return validate_status_type_code(v)
+    @field_validator('name')
+    def validate_name(cls, v):
+        return validate_status_type_name(v)
+
+class AppointmentTypeBase(BaseModel):
+    code: str
+    description: str
+    
+    @field_validator('code')
+    def validate_code(cls, v):
+        return validate_appointment_type_code(v)
+    @field_validator('description')
+    def validate_description(cls, v):
+        return validate_appointment_type_description(v)
+
+class StaffTypeBase(BaseModel):
+    code: str
+    name: str
+    
+    @field_validator('code')
+    def validate_code(cls, v):
+        return validate_staff_type_code(v)
+    @field_validator('name')
+    def validate_name(cls, v):
+        return validate_staff_type_name(v)
 
 # Patient
 class PatientBase(BaseModel):
@@ -39,29 +50,23 @@ class PatientBase(BaseModel):
     email: str
     phone: str
     address: str
-    birthdate: datetime.date
+    birthdate: date
     gender: str
     occupation: str
-
-class StaffType(str, Enum):
-    assistant = 'ASST'
-    doctor = 'DR'
-    receptionist = 'REC'
 
 # Staff
 class StaffBase(BaseModel):
     staff_id: int
     name: str
-    staff_type: StaffType
 
 class AppointmentBase(BaseModel):
-    date: datetime.date
-    time: datetime.time
+    date: date
+    time: time
     patient_id: int
     staff_id: int
     chair_number: int
-    appointment_type: AppointmentTypeEnum
-    status: StatusEnum
+    appointment_type: AppointmentTypeBase
+    status: StatusBase
     notes: Optional[str] = None
     
 class AppointmentCreate(AppointmentBase):
@@ -72,3 +77,8 @@ class Appointment(AppointmentBase):
 
     class Config:
         from_attributes = True
+
+# Response Models
+class StatusResponse(BaseModel):
+    status: StatusBase
+    message: str

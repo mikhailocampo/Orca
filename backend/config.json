@@ -1,0 +1,31 @@
+{
+    "appointment_types": [
+        {"code": "TCST", "description": "Treatment Start" },
+        {"code": "BOPL", "description": "Band Placement" },
+        {"code": "BRPL", "description": "Bracket Placement" },
+        {"code": "BRKT", "description": "Bracket Check" },
+        {"code": "WIRE", "description": "Wire" },
+        {"code": "SEP", "description": "Separator Placement" },
+        {"code": "INVS", "description": "Invisalign Start"},
+        {"code": "INVC", "description": "Invisalign Check"},
+        {"code": "INVR", "description": "Invisalign Refinement"},
+        {"code": "INVF", "description": "Invisalign Finish"},
+        {"code": "RMVL", "description": "Removal" },
+        {"code": "ADJST", "description": "Adjustment" },
+        {"code": "RETN", "description": "Retainer Check" },
+        {"code": "CONS", "description": "Consultation" },
+        {"code": "EMER", "description": "Emergency" },
+        {"code": "OTHR", "description": "Other" }
+    ],
+    "appointment_statuses": [
+        {"code": "CONF", "name": "Confirmed" },
+        {"code": "INPR", "name": "In Progress" },
+        {"code": "COMP", "name": "Complete" },
+        {"code": "CANC", "name": "Cancelled" }
+    ],
+    "staff_types": [
+        {"code": "ORTH", "name": "Orthodontist" },
+        {"code": "RECP", "name": "Receptionist" },
+        {"code": "ASST", "name": "Assistant" }
+    ]
+}

@@ -5,6 +5,7 @@ from .database import Base
 class Status(Base):
     __tablename__ = "statuses"
     status_id = Column(Integer, primary_key=True)
+    code = Column(String, unique=True, nullable=False, index=True)
     name = Column(String)
 
     appointments = relationship("Appointment", back_populates="status")
@@ -12,7 +13,8 @@ class Status(Base):
 class AppointmentType(Base):
     __tablename__ = "appointment_types"
     type_id = Column(Integer, primary_key=True)
-    name = Column(String)
+    code = Column(String, unique=True, nullable=False, index=True)
+    description = Column(String, nullable=False)
 
     appointments = relationship("Appointment", back_populates="appointment_type")
 
@@ -32,8 +34,8 @@ class Patient(Base):
 class Staff(Base):
     __tablename__ = "staff"
     staff_id = Column(Integer, primary_key=True)
+    code = Column(String, unique=True, nullable=False, index=True)
     name = Column(String)
-    staff_type = Column(String)
 
     appointments = relationship("Appointment", back_populates="staff")
 
