@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from datetime import datetime
+import datetime
 from .. import schemas, models
 from ..database import get_db
 
@@ -109,7 +109,7 @@ def create_appointment(appointment: schemas.AppointmentBase, created_by: int, db
         appt_date=new_appointment.appt_date,
         appt_time=new_appointment.appt_time,
         chair_number=new_appointment.chair_number,
-        modified_at=datetime.now()
+        modified_at=datetime.datetime.now()
     )
     db.add(ledger_entry)
     db.commit()
@@ -136,10 +136,11 @@ def get_appointments_by_patient(patient_id: int, db: Session = Depends(get_db)):
 
 @router.get("/appointments/date-range/")
 def get_appointments_by_date_range(start_date: str, end_date: str, db: Session = Depends(get_db)):
+    start_date = datetime.date.fromisoformat(start_date)
+    end_date = datetime.date.fromisoformat(end_date)
     appointments = db.query(models.Appointment).filter(models.Appointment.appt_date.between(start_date, end_date)).all()
-    if not appointments:
-        raise HTTPException(status_code=404, detail="No appointments found within the specified date range")
-    return appointments
+
+    return {"appointments": appointments, "total_appointments": len(appointments)}
 
 @router.put("/appointments/{appointment_id}")
 def update_appointment(appointment_id: int, modified_by: int, update_data: schemas.AppointmentUpdate, db: Session = Depends(get_db)):
@@ -160,7 +161,7 @@ def update_appointment(appointment_id: int, modified_by: int, update_data: schem
             appointment_type_id=appointment.appointment_type_id,
             status_id=appointment.status_id,
             notes=appointment.notes,
-            modified_at=datetime.now(),
+            modified_at=datetime.datetime.now(),
             modified_by=modified_by
         )
         db.add(ledger_entry)
