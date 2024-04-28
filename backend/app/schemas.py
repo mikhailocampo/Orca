@@ -62,6 +62,7 @@ class StaffBase(BaseModel):
 class AppointmentBase(BaseModel):
     appt_date: date
     appt_time: time
+    appt_length: int
     patient_id: int
     staff_id: int
     chair_number: int
@@ -72,6 +73,7 @@ class AppointmentBase(BaseModel):
 class AppointmentUpdate(AppointmentBase):
     appt_date: Optional[date] = None
     appt_time: Optional[time] = None
+    appt_length: Optional[int] = None
     patient_id: Optional[int] = None
     staff_id: Optional[int] = None
     chair_number: Optional[int] = None
