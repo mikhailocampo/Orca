@@ -75,7 +75,6 @@ class Appointment(AppointmentMixin, Base):
     staff = relationship("Staff", back_populates="appointments")  # back reference to staff
     appointment_ledger = relationship("AppointmentLedger", back_populates="appointment")
 
-
 class AppointmentLedger(AppointmentMixin, Base):
     __tablename__ = 'appointment_ledger'
     id = Column(Integer, primary_key=True)
@@ -91,3 +90,9 @@ class AppointmentLedger(AppointmentMixin, Base):
     appointment_type = relationship("AppointmentType", back_populates="appointment_ledger")
     status = relationship("Status", back_populates="appointment_ledger")
 
+def auto_assign_attributes(source, target):
+    """Automatically assign attributes from source to target based on target's columns"""
+    for column in target.__table__.columns:
+        attr = column.name
+        if hasattr(source, attr):
+            setattr(target, attr, getattr(source, attr))

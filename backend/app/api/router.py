@@ -92,36 +92,20 @@ def create_appointment(appointment: schemas.AppointmentBase, created_by: int, db
         appointment.appt_length = db.query(models.AppointmentType).filter(models.AppointmentType.type_id == appointment.appointment_type_id).first().default_length
         print(f"Setting appointment length to default length of appointment type: {appointment.appt_length}")
     
-    # Create new appointment record if all checks pass
-    new_appointment = models.Appointment(
-        appt_date=appointment.appt_date,
-        appt_time=appointment.appt_time,
-        appt_length=appointment.appt_length, # Default length of the appointment type if not provided
-        patient_id=appointment.patient_id,
-        staff_id=appointment.staff_id,
-        chair_number=appointment.chair_number,
-        appointment_type_id=appointment.appointment_type_id, # Unconfirmed by default
-        status_id=1,
-        notes=appointment.notes
-    )
+    # Create new appointment record if all checks pass and log to ledger
+    new_appointment = models.Appointment()
+    models.auto_assign_attributes(appointment, new_appointment)
     db.add(new_appointment)
     db.commit()
     db.refresh(new_appointment)
     
-    # Log the creation in the appointment_ledger
+    # Log to ledger
     ledger_entry = models.AppointmentLedger(
         appointment_id=new_appointment.appointment_id,
-        appointment_type_id=new_appointment.appointment_type_id,
-        status_id=new_appointment.status_id,
-        patient_id=new_appointment.patient_id,
-        staff_id=new_appointment.staff_id,
-        modified_by=created_by,
-        appt_date=new_appointment.appt_date,
-        appt_time=new_appointment.appt_time,
-        appt_length=new_appointment.appt_length,
-        chair_number=new_appointment.chair_number,
-        modified_at=datetime.datetime.now()
+        modified_at=datetime.datetime.now(),
+        modified_by=created_by
     )
+    models.auto_assign_attributes(appointment, ledger_entry)
     db.add(ledger_entry)
     db.commit()
     
