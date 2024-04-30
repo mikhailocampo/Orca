@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import generateTimeSlots from './TimeSlotGenerator';
 import AppointmentSlot from './AppointmentSlot';
-  
+import { SLOT_HEIGHT, TIME_SLOT_INTERVAL } from 'src/utils/Constants';
 
 const Schedule = () => {
     const [appointments, setAppointments] = useState([]);
-    const [date, setDate] = useState(new Date().toISOString().slice(0, 10)); // sets today's date in YYYY-MM-DD
+    //const [date, setDate] = useState(new Date().toISOString().slice(0, 10)); // sets today's date in YYYY-MM-DD
+    const [date, setDate] = useState('2023-10-10'); // sets today's date in YYYY-MM-DD
     const chairs = [1,2,3,4,5];
-    const timeSlots = generateTimeSlots('09:00', '17:00', 15);
+    const timeSlots = generateTimeSlots('09:00', '17:00', TIME_SLOT_INTERVAL);
 
     useEffect(() => {
         fetchAppointmentsForDate(date);
@@ -26,12 +27,9 @@ const Schedule = () => {
             .then(data => {
                 // Ensure data.appointments is an array
                 if (Array.isArray(data.appointments)) {
-                    console.log('Data is an array');
-                    console.log(data.appointments)
                     setAppointments(data.appointments);
                 } else {
                     console.error('Data is not an array');
-                    console.log(data.appointments)
                     setAppointments([]); // Set to empty array if not an array
                 }
             })
@@ -42,19 +40,25 @@ const Schedule = () => {
     }
 
     const formatTime = (timeString) => {
-        // Create a date object based on 'timeString' assuming it's in local time
+
+        if (typeof timeString !== 'string') {
+            console.error('Invalid time string', timeString);
+            return '';
+        }
+
         const [hours, minutes] = timeString.split(':').map(Number);
         const time = new Date();
-        time.setHours(hours, minutes, 0, 0); // Set hours and minutes, reset seconds and milliseconds
-    
-        // Format time to 'h:mm AM/PM'
-        return time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        time.setHours(hours, minutes, 0, 0);
+        return time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, hourCycle: 'h12' }).replace(' ', '');
     };
+    console.log(appointments[1]);
+    //console.log('Generated TimeSlots:', timeSlots);
+    //console.log('Appointment Times:', appointments.map(a => formatTime(a.appt_time)));
     
 
     return (
         <div>
-            <h1>Appointment Schedule</h1>
+            <h1>Appointment Schedule for {date}</h1>
             <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                     <tr>
@@ -66,11 +70,21 @@ const Schedule = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                     {timeSlots.map(time => (
-                        <tr key={time}>
+                        <tr key={time} style={{ height: `${SLOT_HEIGHT}px`}}>
                             <td>{time}</td>
-                            {chairs.map(chair => {
-                                <AppointmentSlot key={chair} appointments={appointments} time={time} chair={chair} />
-                            })}
+                            {chairs.map(chair => (
+                                <td key={`${time}-${chair}`} className="relative p-3 text-center">
+                                    {appointments.filter(appointment => {
+                                        const formattedApptTime = formatTime(appointment.appt_time);
+                                        const matches = formattedApptTime === time && appointment.chair_number === chair;
+                                    return matches;
+                                    }
+                                    ).map(appointment => (
+                                        console.log(appointment),
+                                        <AppointmentSlot key={appointment.appointment_id} appointment={appointment} />
+                                    ))}
+                                </td>
+                            ))}
                         </tr>
                     ))}
                 </tbody>
