@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 import datetime
 from .. import schemas, models
 from ..database import get_db
+from ..utils.orm_utility import serialize_appointments, eager_load_appointment_relationships
 
 router = APIRouter()
 
@@ -133,9 +134,10 @@ def get_appointments_by_patient(patient_id: int, db: Session = Depends(get_db)):
 def get_appointments_by_date_range(start_date: str, end_date: str, db: Session = Depends(get_db)):
     start_date = datetime.date.fromisoformat(start_date)
     end_date = datetime.date.fromisoformat(end_date)
-    appointments = db.query(models.Appointment).filter(models.Appointment.appt_date.between(start_date, end_date)).all()
+    query = db.query(models.Appointment).filter(models.Appointment.appt_date.between(start_date, end_date))
+    appointments = eager_load_appointment_relationships(query).all()
 
-    return {"appointments": appointments, "total_appointments": len(appointments)}
+    return {"appointments": serialize_appointments(appointments), "total_appointments": len(appointments)}
 
 @router.put("/v1/appointments/{appointment_id}")
 def update_appointment(appointment_id: int, modified_by: int, update_data: schemas.AppointmentUpdate, db: Session = Depends(get_db)):
