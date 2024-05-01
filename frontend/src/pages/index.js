@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import generateTimeSlots from './TimeSlotGenerator';
-import AppointmentSlot from './AppointmentSlot';
+import generateTimeSlots from '../components/TimeSlotGenerator';
+import AppointmentSlot from '../components/AppointmentSlot';
 import { SLOT_HEIGHT, TIME_SLOT_INTERVAL } from 'src/utils/Constants';
 
 const Schedule = () => {
@@ -17,7 +17,7 @@ const Schedule = () => {
     const fetchAppointmentsForDate = (date) => {
         const startDate = date;
         const endDate = date;
-        fetch(`http://localhost:8000/appointments/date-range/?start_date=${startDate}&end_date=${endDate}`)
+        fetch(`http://localhost:8000/v1/appointments/date-range/?start_date=${startDate}&end_date=${endDate}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -59,7 +59,7 @@ const Schedule = () => {
     return (
         <div>
             <h1>Appointment Schedule for {date}</h1>
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="w-4/5 divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                     <tr>
                         <th>Time</th>
