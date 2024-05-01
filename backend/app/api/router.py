@@ -1,9 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 import datetime
 from .. import schemas, models
 from ..database import get_db
-from ..utils.orm_utility import serialize_appointments, eager_load_appointment_relationships
+from ..utils.orm_utility import (
+    serialize_appointment, 
+    serialize_appointments, 
+    eager_load_appointment_relationships
+)
 
 router = APIRouter()
 
@@ -114,21 +119,36 @@ def create_appointment(appointment: schemas.AppointmentBase, created_by: int, db
 
 @router.get("/v1/appointments/")
 def get_appointments(db: Session = Depends(get_db)):
-    return db.query(models.Appointment).all()
+    query = db.query(models.Appointment).all()
+    appointments = eager_load_appointment_relationships(query).all()
+    return {"appointments": serialize_appointments(appointments), "total_appointments": len(appointments)}
 
 @router.get("/v1/appointments/{appointment_id}")
 def get_appointment(appointment_id: int, db: Session = Depends(get_db)):
-    appointment = db.query(models.Appointment).filter(models.Appointment.appointment_id == appointment_id).first()
-    if appointment:
-        return appointment
-    raise HTTPException(status_code=404, detail="Appointment not found")
-
+    appointment = db.query(models.Appointment).filter(models.Appointment.appointment_id == appointment_id)
+    appointment = eager_load_appointment_relationships(appointment).first()
+    
+    return {"appointment": serialize_appointment(appointment)}
+    
 @router.get("/v1/appointments/patient/{patient_id}")
 def get_appointments_by_patient(patient_id: int, db: Session = Depends(get_db)):
-    appointments = db.query(models.Appointment).filter(models.Appointment.patient_id == patient_id).all()
-    if not appointments:
-        raise HTTPException(status_code=404, detail="No appointments found for the specified patient")
-    return appointments
+    """
+    Return all existing appointments that are ACTIVE, does not return HISTORY or LEDGER of appointments
+    """
+    query = db.query(models.Appointment).filter(models.Appointment.patient_id == patient_id)
+    appointments = eager_load_appointment_relationships(query).all()
+    
+    return {"appointments": serialize_appointments(appointments), "total_appointments": len(appointments)}
+
+@router.get("/v1/appointments/ledger/{patient_id}")
+def get_appointments_ledger_by_patient(patient_id: int, db: Session = Depends(get_db)):
+    """
+    Return all existing appointments including HISTORY and LEDGER of appointments
+    """
+    query = db.query(models.AppointmentLedger).filter(models.AppointmentLedger.patient_id == patient_id)
+    appointments = query.all()
+    
+    return {"appointments": serialize_appointments(appointments), "total_appointments": len(appointments)}
 
 @router.get("/v1/appointments/date-range/")
 def get_appointments_by_date_range(start_date: str, end_date: str, db: Session = Depends(get_db)):
@@ -145,13 +165,13 @@ def update_appointment(appointment_id: int, modified_by: int, update_data: schem
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
     
-    # Start Transaction
-    with db.begin_nested():
-        # Log to ledger first
+    try:
+        # Freeze the appointment before updating to ledger
         ledger_entry = models.AppointmentLedger(
             appointment_id=appointment.appointment_id,
             appt_date=appointment.appt_date,
             appt_time=appointment.appt_time,
+            appt_length=appointment.appt_length,
             patient_id=appointment.patient_id,
             staff_id=appointment.staff_id,
             chair_number=appointment.chair_number,
@@ -162,25 +182,21 @@ def update_appointment(appointment_id: int, modified_by: int, update_data: schem
             modified_by=modified_by
         )
         db.add(ledger_entry)
+        db.flush()
         
-        # Update appointment record
-        if update_data.appt_date:
-            appointment.appt_date = update_data.appt_date
-        if update_data.appt_time:
-            appointment.appt_time = update_data.appt_time
-        if update_data.patient_id:
-            appointment.patient_id = update_data.patient_id
-        if update_data.staff_id:
-            appointment.staff_id = update_data.staff_id
-        if update_data.chair_number:
-            appointment.chair_number = update_data.chair_number
-        if update_data.appointment_type_id:
-            appointment.appointment_type_id = update_data.appointment_type_id
-        if update_data.status_id:
-            appointment.status_id = update_data.status_id
-        if update_data.notes:
-            appointment.notes = update_data.notes
+        # Start transaction
+        with db.begin_nested():
+            # Dynamically update fields from update_data request
+            for var_name, value in update_data.model_dump(exclude_unset=True).items():
+                if hasattr(appointment, var_name) and value is not None:
+                    setattr(appointment, var_name, value)
+            
+            db.flush()
         
         db.commit()
+        
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error updating appointment: {e}")
     
-    return {"message": "Appointment updated successfully", "updated_appointment": appointment, "ledger_entry": ledger_entry}
+    return {"message": "Appointment updated successfully"}

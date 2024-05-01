@@ -11,19 +11,22 @@ def serialize_appointment(appointment):
         "chair_number": appointment.chair_number,
         "notes": appointment.notes,
         "patient": {
+            "id": appointment.patient.patient_id,
             "name": appointment.patient.name,
             "email": appointment.patient.email,
             "phone": appointment.patient.phone
         },
         "appointment_type": {
+            "id": appointment.appointment_type.type_id,
             "description": appointment.appointment_type.description,
-            "code": appointment.appointment_type.code,
-            "default_length": appointment.appointment_type.default_length
+            "code": appointment.appointment_type.code
         },
         "staff": {
+            "id": appointment.staff.staff_id,
             "name": appointment.staff.name
         },
         "status": {
+            "id": appointment.status.status_id, 
             "name": appointment.status.name,
             "code": appointment.status.code
         }

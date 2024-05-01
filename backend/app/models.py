@@ -63,7 +63,7 @@ class AppointmentMixin:
     chair_number = Column(Integer)
     appointment_type_id = Column(Integer, ForeignKey('appointment_types.type_id'))
     status_id = Column(Integer, ForeignKey('statuses.status_id'))
-    notes = Column(Text)
+    notes = Column(Text, default='')
 
 class Appointment(AppointmentMixin, Base):
     __tablename__ = 'appointments'
