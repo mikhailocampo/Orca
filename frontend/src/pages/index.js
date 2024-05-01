@@ -6,7 +6,7 @@ import { SLOT_HEIGHT, TIME_SLOT_INTERVAL } from 'src/utils/Constants';
 const Schedule = () => {
     const [appointments, setAppointments] = useState([]);
     //const [date, setDate] = useState(new Date().toISOString().slice(0, 10)); // sets today's date in YYYY-MM-DD
-    const [date, setDate] = useState('2023-10-10'); // sets today's date in YYYY-MM-DD
+    const [date, setDate] = useState('2023-10-10'); 
     const chairs = [1,2,3,4,5];
     const timeSlots = generateTimeSlots('09:00', '17:00', TIME_SLOT_INTERVAL);
 
@@ -52,8 +52,6 @@ const Schedule = () => {
         return time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, hourCycle: 'h12' }).replace(' ', '');
     };
     console.log(appointments[1]);
-    //console.log('Generated TimeSlots:', timeSlots);
-    //console.log('Appointment Times:', appointments.map(a => formatTime(a.appt_time)));
     
 
     return (
@@ -71,17 +69,17 @@ const Schedule = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                     {timeSlots.map(time => (
                         <tr key={time} style={{ height: `${SLOT_HEIGHT}px`}}>
-                            <td>{time}</td>
+                            <td className='text-center w-1/12 bg-gray-100'>{time}</td>
                             {chairs.map(chair => (
                                 <td key={`${time}-${chair}`} className="relative p-3 text-center">
                                     {appointments.filter(appointment => {
-                                        const formattedApptTime = formatTime(appointment.appt_time);
+                                        const formattedApptTime = formatTime(appointment.time);
                                         const matches = formattedApptTime === time && appointment.chair_number === chair;
                                     return matches;
                                     }
                                     ).map(appointment => (
                                         console.log(appointment),
-                                        <AppointmentSlot key={appointment.appointment_id} appointment={appointment} />
+                                        <AppointmentSlot key={appointment.id} appointment={appointment} />
                                     ))}
                                 </td>
                             ))}

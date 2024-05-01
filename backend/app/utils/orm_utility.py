@@ -23,7 +23,8 @@ def serialize_appointment(appointment):
         },
         "staff": {
             "id": appointment.staff.staff_id,
-            "name": appointment.staff.name
+            "name": appointment.staff.name,
+            "type": appointment.staff.staff_type.code
         },
         "status": {
             "id": appointment.status.status_id, 
