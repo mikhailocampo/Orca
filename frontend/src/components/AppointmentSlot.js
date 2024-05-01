@@ -35,10 +35,17 @@ const AppointmentSlot = ({ appointment }) => {
         return '3px solid black';
     }
   }
+  const getBackgroundColor = (appointmentCode) => {
+    switch (appointmentCode) {
+      case 'TCST': return 'rgba(255, 0, 0, 0.5)';
+      case 'BOPL': return 'rgba(0, 255, 0, 0.5)';
+      case 'ADJST': return 'rgba(0, 0, 255, 0.5)';
+      case 'RETN': return 'rgba(0, 0, 255, 0.5)';
+    }
+  }
 
   const startOffset = 0
   const height = (appointment.length / TIME_SLOT_INTERVAL) * SLOT_HEIGHT; 
-  console.log(height);
 
   return (
       <div onClick={openModal}
@@ -47,8 +54,8 @@ const AppointmentSlot = ({ appointment }) => {
           top: `${startOffset * SLOT_HEIGHT}px`,
           height: `${height}px`, // Enforce this height strictly
           maxHeight: `${height}px`, // Ensure maximum height does not exceed the calculated height
-          width: '100%', // Ensure it fills the cell
-          backgroundColor: 'rgba(255, 255, 255, 0.8)', 
+          width: '95%', // Ensure it fills the cell
+          backgroundColor: getBackgroundColor(appointment.appointment_type.code), 
           border: '1px solid #000',
           borderLeft: getBorderStyle(appointment.status.code),
           borderRadius: '5px',

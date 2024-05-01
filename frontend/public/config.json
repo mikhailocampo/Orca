@@ -1,0 +1,31 @@
+{
+    "appointment_types": [
+        {"code": "TCST", "description": "Treatment Start", "default_length": 90 },
+        {"code": "BOPL", "description": "Band Placement", "default_length": 60 },
+        {"code": "BRPL", "description": "Bracket Placement", "default_length": 60 },
+        {"code": "BRKT", "description": "Bracket Repair", "default_length": 40 },
+        {"code": "SEP", "description": "Separator Placement", "default_length": 15 },
+        {"code": "INVS", "description": "Invisalign Start", "default_length": 60},
+        {"code": "INVC", "description": "Invisalign Check", "default_length": 30},
+        {"code": "INVR", "description": "Invisalign Refinement", "default_length": 60},
+        {"code": "INVF", "description": "Invisalign Removal", "default_length": 60},
+        {"code": "RMVL", "description": "Removal", "default_length": 60 },
+        {"code": "ADJST", "description": "Adjustment", "default_length": 30 },
+        {"code": "RETN", "description": "Retainer Check", "default_length": 15 },
+        {"code": "CONS", "description": "Consultation", "default_length": 60 },
+        {"code": "EMER", "description": "Emergency", "default_length": 15 },
+        {"code": "OTHR", "description": "Other", "default_length": 15 }
+    ],
+    "appointment_statuses": [
+        {"code": "UNCF", "name": "Unconfirmed" },
+        {"code": "CONF", "name": "Confirmed" },
+        {"code": "INPR", "name": "In Progress" },
+        {"code": "COMP", "name": "Complete" },
+        {"code": "CANC", "name": "Cancelled" }
+    ],
+    "staff_types": [
+        {"code": "ORTH", "description": "Orthodontist" },
+        {"code": "RECP", "description": "Receptionist" },
+        {"code": "ASST", "description": "Assistant" }
+    ]
+}

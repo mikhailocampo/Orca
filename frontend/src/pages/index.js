@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import generateTimeSlots from '../components/TimeSlotGenerator';
 import AppointmentSlot from '../components/AppointmentSlot';
+import NewAppointmentModal from '../components/NewAppointmentModal';
 import { SLOT_HEIGHT, TIME_SLOT_INTERVAL } from 'src/utils/Constants';
 
 const Schedule = () => {
@@ -9,10 +10,28 @@ const Schedule = () => {
     const [date, setDate] = useState('2023-10-10'); 
     const chairs = [1,2,3,4,5];
     const timeSlots = generateTimeSlots('09:00', '17:00', TIME_SLOT_INTERVAL);
+    const [newModalOpen, setNewModalOpen] = useState(false);
+    const [selectedTime, setSelectedTime] = useState('');
+    const [selectedChair, setSelectedChair] = useState(1);
 
     useEffect(() => {
         fetchAppointmentsForDate(date);
     }, [date]);
+
+    const openNewAppointmentModal = (time, chair) => {
+        setSelectedTime(time);
+        setSelectedChair(chair);
+        setNewModalOpen(true);
+    };
+
+    const closeNewAppointmentModal = () => {
+        setNewModalOpen(false);
+    };
+
+    const saveNewAppointment = (newAppointment) => {
+        console.log('New appointment:', newAppointment);
+        closeNewAppointmentModal();
+    };
 
     const fetchAppointmentsForDate = (date) => {
         const startDate = date;
@@ -37,7 +56,7 @@ const Schedule = () => {
                 console.error('There has been a problem with your fetch operation:', error);
                 setAppointments([]); // Ensure it's always an array
             });
-    }
+    };
 
     const formatTime = (timeString) => {
 
@@ -51,13 +70,12 @@ const Schedule = () => {
         time.setHours(hours, minutes, 0, 0);
         return time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, hourCycle: 'h12' }).replace(' ', '');
     };
-    console.log(appointments[1]);
     
 
     return (
-        <div>
+        <div className='overflow-none'>
             <h1>Appointment Schedule for {date}</h1>
-            <table className="w-4/5 divide-y divide-gray-200">
+            <table className="w-full divide-y divide-gray-200 cursor-not-allowed ">
                 <thead className="bg-gray-50">
                     <tr>
                         <th>Time</th>
@@ -71,14 +89,17 @@ const Schedule = () => {
                         <tr key={time} style={{ height: `${SLOT_HEIGHT}px`}}>
                             <td className='text-center w-1/12 bg-gray-100'>{time}</td>
                             {chairs.map(chair => (
-                                <td key={`${time}-${chair}`} className="relative p-3 text-center">
+                                <td 
+                                key={`${time}-${chair}`} 
+                                className="relative p-3 text-center cursor-pointer hover:bg-gray-100" 
+                                onClick={() => openNewAppointmentModal(time, chair)}
+                                >
                                     {appointments.filter(appointment => {
                                         const formattedApptTime = formatTime(appointment.time);
                                         const matches = formattedApptTime === time && appointment.chair_number === chair;
                                     return matches;
                                     }
                                     ).map(appointment => (
-                                        console.log(appointment),
                                         <AppointmentSlot key={appointment.id} appointment={appointment} />
                                     ))}
                                 </td>
@@ -87,6 +108,15 @@ const Schedule = () => {
                     ))}
                 </tbody>
             </table>
+            {newModalOpen && (
+                <NewAppointmentModal
+                    isOpen={newModalOpen}
+                    onClose={closeNewAppointmentModal}
+                    onSave={saveNewAppointment}
+                    initialData={{ date: date, time: selectedTime, chair: selectedChair }}
+                />
+            
+            )}
         </div>
     );
 }
