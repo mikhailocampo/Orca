@@ -6,7 +6,7 @@ from ..database import get_db
 
 router = APIRouter()
 
-@router.post("/appointment-types/")
+@router.post("/admin/appointment-types/")
 def create_appointment_type(appointment_type: schemas.AppointmentTypeBase, db: Session = Depends(get_db)):
     db_appointment_type = models.AppointmentType(
         code=appointment_type.code, 
@@ -18,7 +18,7 @@ def create_appointment_type(appointment_type: schemas.AppointmentTypeBase, db: S
     db.refresh(db_appointment_type)
     return db_appointment_type
 
-@router.post("/statuses/")
+@router.post("/admin/statuses/")
 def create_status(status: schemas.StatusBase, db: Session = Depends(get_db)):
     db_status = models.Status(code=status.code, name=status.name)
     db.add(db_status)
@@ -26,7 +26,7 @@ def create_status(status: schemas.StatusBase, db: Session = Depends(get_db)):
     db.refresh(db_status)
     return db_status
 
-@router.post("/staff-types/")
+@router.post("/admin/staff-types/")
 def create_staff_type(staff_type: schemas.StaffTypeBase, db: Session = Depends(get_db)):
     db_staff_type = models.StaffType(code=staff_type.code, description=staff_type.description)
     db.add(db_staff_type)
@@ -34,7 +34,7 @@ def create_staff_type(staff_type: schemas.StaffTypeBase, db: Session = Depends(g
     db.refresh(db_staff_type)
     return db_staff_type
 
-@router.post("/staff")
+@router.post("/admin/staff")
 def create_staff(staff: schemas.StaffBase, db: Session = Depends(get_db)):
     # Check if staff type exists
     if not db.query(models.StaffType).filter(models.StaffType.staff_type_id == staff.staff_type_id).first():
@@ -50,7 +50,7 @@ def create_staff(staff: schemas.StaffBase, db: Session = Depends(get_db)):
     db.refresh(new_staff)
     return {"new_staff": new_staff, "message": "Staff created successfully"}
 
-@router.post("/patients/")
+@router.post("/admin/patients/")
 def create_patient(patient: schemas.PatientBase, db: Session = Depends(get_db)):
     new_patient = models.Patient(
         name=patient.name,
@@ -65,7 +65,7 @@ def create_patient(patient: schemas.PatientBase, db: Session = Depends(get_db)):
     db.refresh(new_patient)
     return {"patient": new_patient, "message": "Patient created successfully"}
 
-@router.post("/appointments/")
+@router.post("/v1/appointments/")
 def create_appointment(appointment: schemas.AppointmentBase, created_by: int, db: Session = Depends(get_db)):
     # Check if patient exists
     if not db.query(models.Patient).filter(models.Patient.patient_id == appointment.patient_id).first():
@@ -111,25 +111,25 @@ def create_appointment(appointment: schemas.AppointmentBase, created_by: int, db
     
     return {"message": "Appointment created successfully"}
 
-@router.get("/appointments/")
+@router.get("/v1/appointments/")
 def get_appointments(db: Session = Depends(get_db)):
     return db.query(models.Appointment).all()
 
-@router.get("/appointments/{appointment_id}")
+@router.get("/v1/appointments/{appointment_id}")
 def get_appointment(appointment_id: int, db: Session = Depends(get_db)):
     appointment = db.query(models.Appointment).filter(models.Appointment.appointment_id == appointment_id).first()
     if appointment:
         return appointment
     raise HTTPException(status_code=404, detail="Appointment not found")
 
-@router.get("/appointments/patient/{patient_id}")
+@router.get("/v1/appointments/patient/{patient_id}")
 def get_appointments_by_patient(patient_id: int, db: Session = Depends(get_db)):
     appointments = db.query(models.Appointment).filter(models.Appointment.patient_id == patient_id).all()
     if not appointments:
         raise HTTPException(status_code=404, detail="No appointments found for the specified patient")
     return appointments
 
-@router.get("/appointments/date-range/")
+@router.get("/v1/appointments/date-range/")
 def get_appointments_by_date_range(start_date: str, end_date: str, db: Session = Depends(get_db)):
     start_date = datetime.date.fromisoformat(start_date)
     end_date = datetime.date.fromisoformat(end_date)
@@ -137,7 +137,7 @@ def get_appointments_by_date_range(start_date: str, end_date: str, db: Session =
 
     return {"appointments": appointments, "total_appointments": len(appointments)}
 
-@router.put("/appointments/{appointment_id}")
+@router.put("/v1/appointments/{appointment_id}")
 def update_appointment(appointment_id: int, modified_by: int, update_data: schemas.AppointmentUpdate, db: Session = Depends(get_db)):
     appointment = db.query(models.Appointment).filter(models.Appointment.appointment_id == appointment_id).first()
     if not appointment:
