@@ -7,7 +7,7 @@ const Skeleton = () => {
 
   return (
       <div
-        className='bg-white shadow-lg rounded-lg p-4 overflow-hidden cursor-pointer border-2 border-gray-200 bg-gray-800 w-full z-10 animate-pulse absolute' 
+        className='bg-gray shadow-lg rounded-lg p-4 overflow-hidden cursor-pointer border-2 border-gray-200 bg-gray-800 w-full z-10 animate-pulse absolute' 
         style={{
           top: `${startOffset * SLOT_HEIGHT}px`,
           height: `${height}px`, // Enforce this height strictly
