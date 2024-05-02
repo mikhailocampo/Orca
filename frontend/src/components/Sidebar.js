@@ -8,7 +8,6 @@ const SideBar = ({ currentStep, setStep }) => {
             <ul className="list-decimal">
                 <li onClick={() => setStep(0)} className={currentStep === 0 ? 'text-blue-500' : ''}>Endnotes</li>
                 <li onClick={() => setStep(1)} className={currentStep === 1 ? 'text-blue-500' : ''}>Next Appointment</li>
-                <li onClick={() => setStep(2)} className={currentStep === 2 ? 'text-blue-500' : ''}>Insurance Claim</li>
             </ul>
         </div>
     )
