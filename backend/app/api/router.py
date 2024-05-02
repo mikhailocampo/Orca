@@ -71,6 +71,11 @@ def create_patient(patient: schemas.PatientBase, db: Session = Depends(get_db)):
     db.refresh(new_patient)
     return {"patient": new_patient, "message": "Patient created successfully"}
 
+@router.get("/v1/patients/{patient_id}")
+def get_patient_by_id(patient_id: int, db: Session = Depends(get_db)):
+    patient = db.query(models.Patient).filter(models.Patient.patient_id == patient_id).first()
+    return {"patient": patient}
+
 @router.post("/v1/appointments/")
 def create_appointment(appointment: schemas.AppointmentBase, created_by: int, db: Session = Depends(get_db)):
     # Check if patient exists
