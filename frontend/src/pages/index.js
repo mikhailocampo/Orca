@@ -7,7 +7,7 @@ import ContextMenu from '../components/ContextMenu';
 import { useRouter } from 'next/router';
 import { SLOT_HEIGHT, TIME_SLOT_INTERVAL } from 'src/utils/Constants';
 
-import Skeleton from '../components/Skeleton';
+import {Skeleton} from '../components/Skeleton';
 
 const Schedule = () => {
     const [appointments, setAppointments] = useState([]);
@@ -31,7 +31,11 @@ const Schedule = () => {
 
     const openModal = (type, props = {}) => {
         closeContextMenu(); // Close any open context menu
-        setModal({ type, props });
+        console.log(type, props);
+
+        const modalProps = {type, props};
+
+        setModal(modalProps);
     };
 
     const closeModal = () => {
@@ -142,7 +146,7 @@ const Schedule = () => {
                                 onClick={() => {
                                     setSelectedTime(time);
                                     setSelectedChair(chair);
-                                    openModal('newAppointment', { date, time, chair });
+                                    openModal('newAppointmentModal', { date, time, chair_number: chair, appointment_type: {code: 'Select'} });
                                 }}
                                 >
                                     {loading ? <Skeleton /> : 
@@ -159,7 +163,6 @@ const Schedule = () => {
                                                     openModal={openModal}
                                                     closeModal={closeModal}
                                                     handleRightClick={(e) => {
-                                                        console.log(appointment.id);
                                                         handleRightClick(e, appointment.id)
                                                     } }
                                                 />
@@ -171,20 +174,20 @@ const Schedule = () => {
                     ))}
                 </tbody>
             </table>
-            {modal.type === 'newAppointment' && (
+            {modal.type === 'newAppointmentModal' && (
                 <NewAppointmentModal
-                    {...modal.props}
-                    isOpen={modal.type === 'newAppointment'}
+                    isOpen={modal.type === 'newAppointmentModal'}
                     onClose={closeModal}
                     onSave={saveNewAppointment}
-                    initialData={{ date: date, time: selectedTime, chair: selectedChair }}
+                    initialData={{ ...modal.props }}
                 />
             )}
             {modal.type === 'appointmentModal' && (
                 <AppointmentModal
-                    {...modal.props}
                     isOpen={modal.type === 'appointmentModal'}
                     onClose={closeModal}
+                    onUpdate={(updatedAppointment) => console.log('Updated appointment:', updatedAppointment)}
+                    initialData={{ ...modal.props.initialData }}
                 />
             )}
             <ContextMenu

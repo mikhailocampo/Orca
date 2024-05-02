@@ -14,7 +14,7 @@ const AppointmentSlot = ({ appointment, openModal, closeModal, handleRightClick 
   const handleAppointmentClick = (event) => {
     event.preventDefault();
     event.stopPropagation();
-    openModal('appointmentModal', { appointment });
+    openModal('appointmentModal', { initialData: appointment });
   }
 
   const getBorderStyle = (statusCode) => {
@@ -23,6 +23,10 @@ const AppointmentSlot = ({ appointment, openModal, closeModal, handleRightClick 
         return 'border-l-8 border-green-500';
       case 'UNCF':
         return 'border-l-8 border-yellow-500';
+      case 'INPR':
+        return 'border-l-8 border-blue-500';
+      case 'COMP':
+        return 'border-l-8 border-green-500 bg-gray-800';
       default:
         return 'border-l-8 border-grey-300';
     }
@@ -42,7 +46,7 @@ const AppointmentSlot = ({ appointment, openModal, closeModal, handleRightClick 
 
   return (
       <div onClick={handleAppointmentClick} onContextMenu={customHandleRightClick} id={`appointment-${appointment.id}`}
-          className={`shadow-lg shadow-inner p-2 overflow-hidden cursor-pointer w-full z-10 absolute text-left ${getBackgroundColor(appointment.appointment_type.code)} ${getBorderStyle(appointment.status.code)}`}
+          className={`shadow-inner p-2 overflow-hidden cursor-pointer w-full z-10 absolute text-left ${getBackgroundColor(appointment.appointment_type.code)} ${getBorderStyle(appointment.status.code)}`}
           style={{ top: `${startOffset * SLOT_HEIGHT}px`, height: `${height}px`, maxHeight: `${height}px`, }}>
 
             <h2 className="font-bold">{appointment.appointment_type.code}</h2>
