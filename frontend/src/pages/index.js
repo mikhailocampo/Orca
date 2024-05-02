@@ -4,6 +4,8 @@ import AppointmentSlot from '../components/AppointmentSlot';
 import NewAppointmentModal from '../components/NewAppointmentModal';
 import { SLOT_HEIGHT, TIME_SLOT_INTERVAL } from 'src/utils/Constants';
 
+import Skeleton from '../components/Skeleton';
+
 const Schedule = () => {
     const [appointments, setAppointments] = useState([]);
     //const [date, setDate] = useState(new Date().toISOString().slice(0, 10)); // sets today's date in YYYY-MM-DD
@@ -13,9 +15,13 @@ const Schedule = () => {
     const [newModalOpen, setNewModalOpen] = useState(false);
     const [selectedTime, setSelectedTime] = useState('');
     const [selectedChair, setSelectedChair] = useState(1);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchAppointmentsForDate(date);
+        setTimeout(() => {
+            setLoading(false);
+        }, 1000);
     }, [date]);
 
     const openNewAppointmentModal = (time, chair) => {
@@ -73,9 +79,9 @@ const Schedule = () => {
     
 
     return (
-        <div className='overflow-none'>
+        <div className='overflow-none flex flex-col justify-center items-center select-none'>
             <h1>Appointment Schedule for {date}</h1>
-            <table className="w-full divide-y divide-gray-200 cursor-not-allowed ">
+            <table className="w-11/12 divide-y divide-gray-200 ">
                 <thead className="bg-gray-50">
                     <tr>
                         <th>Time</th>
@@ -94,14 +100,17 @@ const Schedule = () => {
                                 className="relative p-3 text-center cursor-pointer hover:bg-gray-100" 
                                 onClick={() => openNewAppointmentModal(time, chair)}
                                 >
-                                    {appointments.filter(appointment => {
+                                    {loading ? <Skeleton /> : 
+                                    
+                                    appointments.filter(appointment => {
                                         const formattedApptTime = formatTime(appointment.time);
                                         const matches = formattedApptTime === time && appointment.chair_number === chair;
-                                    return matches;
+                                            return matches;
+                                            }
+                                            ).map(appointment => (
+                                                <AppointmentSlot key={appointment.id} appointment={appointment} />
+                                            ))
                                     }
-                                    ).map(appointment => (
-                                        <AppointmentSlot key={appointment.id} appointment={appointment} />
-                                    ))}
                                 </td>
                             ))}
                         </tr>
