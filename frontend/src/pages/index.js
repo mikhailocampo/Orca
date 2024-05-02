@@ -1,21 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import generateTimeSlots from '../components/TimeSlotGenerator';
 import AppointmentSlot from '../components/AppointmentSlot';
+import AppointmentModal from '../components/AppointmentModal';
 import NewAppointmentModal from '../components/NewAppointmentModal';
+import ContextMenu from '../components/ContextMenu';
+import { useRouter } from 'next/router';
 import { SLOT_HEIGHT, TIME_SLOT_INTERVAL } from 'src/utils/Constants';
 
 import Skeleton from '../components/Skeleton';
 
 const Schedule = () => {
     const [appointments, setAppointments] = useState([]);
+    const [contextMenu, setContextMenu] = useState({ visible: false, position: { x: 0, y: 0 }, items: [] });
+    const [modal, setModal] = useState({ type: null, props: {} });
     //const [date, setDate] = useState(new Date().toISOString().slice(0, 10)); // sets today's date in YYYY-MM-DD
     const [date, setDate] = useState('2023-10-10'); 
     const chairs = [1,2,3,4,5];
     const timeSlots = generateTimeSlots('09:00', '17:00', TIME_SLOT_INTERVAL);
-    const [newModalOpen, setNewModalOpen] = useState(false);
     const [selectedTime, setSelectedTime] = useState('');
     const [selectedChair, setSelectedChair] = useState(1);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
         fetchAppointmentsForDate(date);
@@ -24,20 +29,56 @@ const Schedule = () => {
         }, 1000);
     }, [date]);
 
-    const openNewAppointmentModal = (time, chair) => {
-        setSelectedTime(time);
-        setSelectedChair(chair);
-        setNewModalOpen(true);
+    const openModal = (type, props = {}) => {
+        closeContextMenu(); // Close any open context menu
+        setModal({ type, props });
     };
 
-    const closeNewAppointmentModal = () => {
-        setNewModalOpen(false);
+    const closeModal = () => {
+        setModal({ type: null, props: {} });
     };
 
     const saveNewAppointment = (newAppointment) => {
         console.log('New appointment:', newAppointment);
         closeNewAppointmentModal();
     };
+
+    const handleRightClick = (e, appointmentId) => {
+        e.preventDefault();
+        closeModal(); // Close any open modal
+
+        const x = e.clientX + window.scrollX;
+        const y = e.clientY + window.scrollY;
+
+        const menuItems = [
+            { label: 'Edit Status', onClick: () => console.log('Edit Status') },
+            { label: 'Checkout', onClick: () => {
+                // Extract the appointment ID from the target element's ID then navigate to the checkout page
+                const targetId = e.target.id;
+                const extractedAppointmentId = targetId.split('-')[1];
+                console.log('Checkout:', extractedAppointmentId);
+                router.push(`/flows/checkout/${extractedAppointmentId}`);
+            }},
+        ];
+        setContextMenu({
+            visible: true,
+            position: { x, y },
+            items: menuItems,
+        });
+    };
+
+    const closeContextMenu = () => {
+        setContextMenu({ visible: false, position: { x: 0, y: 0 }, items: [] });
+    };
+
+    useEffect(() => {
+        // Add event listener when the component mounts
+        document.addEventListener('contextmenu', handleRightClick);
+        return () => {
+            // Clean up the event handler when the component unmounts
+            document.removeEventListener('contextmenu', handleRightClick);
+        };
+    }, []);
 
     const fetchAppointmentsForDate = (date) => {
         const startDate = date;
@@ -79,7 +120,7 @@ const Schedule = () => {
     
 
     return (
-        <div className='overflow-none flex flex-col justify-center items-center select-none'>
+        <div className='overflow-none flex flex-col justify-center items-center select-none' onClick={closeContextMenu}>
             <h1>Appointment Schedule for {date}</h1>
             <table className="w-11/12 divide-y divide-gray-200 ">
                 <thead className="bg-gray-50">
@@ -97,8 +138,12 @@ const Schedule = () => {
                             {chairs.map(chair => (
                                 <td 
                                 key={`${time}-${chair}`} 
-                                className="relative p-3 text-center cursor-pointer hover:bg-gray-100" 
-                                onClick={() => openNewAppointmentModal(time, chair)}
+                                className="relative text-center cursor-pointer hover:bg-gray-100" 
+                                onClick={() => {
+                                    setSelectedTime(time);
+                                    setSelectedChair(chair);
+                                    openModal('newAppointment', { date, time, chair });
+                                }}
                                 >
                                     {loading ? <Skeleton /> : 
                                     
@@ -108,7 +153,16 @@ const Schedule = () => {
                                             return matches;
                                             }
                                             ).map(appointment => (
-                                                <AppointmentSlot key={appointment.id} appointment={appointment} />
+                                                <AppointmentSlot 
+                                                    key={appointment.id} 
+                                                    appointment={appointment} 
+                                                    openModal={openModal}
+                                                    closeModal={closeModal}
+                                                    handleRightClick={(e) => {
+                                                        console.log(appointment.id);
+                                                        handleRightClick(e, appointment.id)
+                                                    } }
+                                                />
                                             ))
                                     }
                                 </td>
@@ -117,15 +171,28 @@ const Schedule = () => {
                     ))}
                 </tbody>
             </table>
-            {newModalOpen && (
+            {modal.type === 'newAppointment' && (
                 <NewAppointmentModal
-                    isOpen={newModalOpen}
-                    onClose={closeNewAppointmentModal}
+                    {...modal.props}
+                    isOpen={modal.type === 'newAppointment'}
+                    onClose={closeModal}
                     onSave={saveNewAppointment}
                     initialData={{ date: date, time: selectedTime, chair: selectedChair }}
                 />
-            
             )}
+            {modal.type === 'appointmentModal' && (
+                <AppointmentModal
+                    {...modal.props}
+                    isOpen={modal.type === 'appointmentModal'}
+                    onClose={closeModal}
+                />
+            )}
+            <ContextMenu
+                visible={contextMenu.visible}
+                position={contextMenu.position}
+                onClose={closeContextMenu}
+                menuItems={contextMenu.items}
+            />
         </div>
     );
 }
