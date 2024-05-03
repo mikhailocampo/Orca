@@ -34,8 +34,8 @@ const AppointmentSlot = ({ appointment, openModal, closeModal, handleRightClick 
         style.border = 'border-l-8 border-blue-500';
         break;
       case 'COMP':
-        style.border = 'border-l-8 border-gray-800';
-        style.background = 'bg-gray-800';
+        style.border = 'border-l-8 border-gray-600';
+        style.background = 'bg-gray-600';
         break;
       default:
         break;
