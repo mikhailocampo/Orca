@@ -14,20 +14,6 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, initialData }) => {
             return () => handleBodyScroll(false);
         }
     }, [isOpen]);
-    
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const newAppointment = {
-            date,
-            time: convertTo24HourTime(time),
-            length: appointmentLength,
-            patientID: parseInt(patientID, 10),
-            chair,
-            appointment_type: appointmentType,
-            notes
-        };
-        onSave(newAppointment);
-    };
 
     const handleBackdropClick = (event) => {
         if (event.target === event.currentTarget) {
@@ -52,7 +38,7 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, initialData }) => {
                 <h2 className="text-lg font-bold">New Appointment</h2>
                 <AppointmentForm
                     initialData={initialData}
-                    onSave={handleSubmit}
+                    onSave={onSave}
                     onClose={onClose}
                 />
             </div>

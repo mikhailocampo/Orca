@@ -17,36 +17,59 @@ const AppointmentSlot = ({ appointment, openModal, closeModal, handleRightClick 
     openModal('appointmentModal', { initialData: appointment });
   }
 
-  const getBorderStyle = (statusCode) => {
+  const getAppointmentSlotStyle = (appointmentCode, statusCode = '') => {
+    let style = {
+      border: 'border-l-8 border-grey-300',
+      background: 'bg-gray-100',
+    };
+  
     switch (statusCode) {
       case 'CONF':
-        return 'border-l-8 border-green-500';
+        style.border = 'border-l-8 border-green-500';
+        break;
       case 'UNCF':
-        return 'border-l-8 border-yellow-500';
+        style.border = 'border-l-8 border-yellow-500';
+        break;
       case 'INPR':
-        return 'border-l-8 border-blue-500';
+        style.border = 'border-l-8 border-blue-500';
+        break;
       case 'COMP':
-        return 'border-l-8 border-green-500 bg-gray-800';
+        style.border = 'border-l-8 border-gray-800';
+        style.background = 'bg-gray-800';
+        break;
       default:
-        return 'border-l-8 border-grey-300';
+        break;
     }
-  }
-  const getBackgroundColor = (appointmentCode) => {
-    switch (appointmentCode) {
-      case 'TCST': return 'bg-red-500';
-      case 'BOPL': return 'bg-red-500';
-      case 'ADJST': return 'bg-blue-500';
-      case 'RETN': return 'bg-purple-300';
-      default: return 'bg-gray-100';
+  
+    if (statusCode !== 'COMP') {
+      switch (appointmentCode) {
+        case 'TCST':
+        case 'BOPL':
+          style.background = 'bg-red-500';
+          break;
+        case 'ADJST':
+          style.background = 'bg-blue-500';
+          break;
+        case 'RETN':
+          style.background = 'bg-purple-300';
+          break;
+        case 'CONS':
+          style.background = 'bg-purple-600';
+          break;
+        default:
+          break;
+      }
     }
-  }
+  
+    return style;
+  };
 
   const startOffset = 0
   const height = (appointment.length / TIME_SLOT_INTERVAL) * SLOT_HEIGHT; 
 
   return (
       <div onClick={handleAppointmentClick} onContextMenu={customHandleRightClick} id={`appointment-${appointment.id}`}
-          className={`shadow-inner p-2 overflow-hidden cursor-pointer w-full z-10 absolute text-left ${getBackgroundColor(appointment.appointment_type.code)} ${getBorderStyle(appointment.status.code)}`}
+          className={`shadow-inner p-2 overflow-hidden cursor-pointer w-full z-10 absolute text-left ${getAppointmentSlotStyle(appointment.appointment_type.code, appointment.status.code).background} ${getAppointmentSlotStyle(appointment.appointment_type.code, appointment.status.code).border}`}
           style={{ top: `${startOffset * SLOT_HEIGHT}px`, height: `${height}px`, maxHeight: `${height}px`, }}>
 
             <h2 className="font-bold">{appointment.appointment_type.code}</h2>

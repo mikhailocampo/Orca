@@ -42,8 +42,45 @@ const Schedule = () => {
     };
 
     const saveNewAppointment = (newAppointment) => {
+        //console.log('New appointment:', newAppointment);
+
         console.log('New appointment:', newAppointment);
-        closeNewAppointmentModal();
+
+        const appointmentToSend = {
+            appt_date: newAppointment.appt_date,
+            appt_time: newAppointment.appt_time,
+            appt_length: newAppointment.appt_length,
+            patient_id: newAppointment.patient_id,
+            staff_id: newAppointment.staff_id,
+            chair_number: newAppointment.chair_number,
+            appointment_type_id: newAppointment.appointment_type_id,
+            status_id: newAppointment.status_id,
+            notes: newAppointment.notes,
+        }
+
+        console.log('Appointment to send:', appointmentToSend);
+
+        fetch(`http://localhost:8000/v1/appointments/?created_by=${newAppointment.modified_by}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(appointmentToSend),
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Appointment created:', data);
+                closeModal();
+                fetchAppointmentsForDate(date);
+            })
+            .catch(error => {
+                console.error('There has been a problem with your fetch operation:', error);
+            });
     };
 
     const saveUpdatedAppointment = (updatedAppointment) => {
@@ -83,7 +120,6 @@ const Schedule = () => {
                 console.error('There has been a problem with your fetch operation:', error);
             });
     };
-    
 
     const handleRightClick = (e, appointmentId) => {
         e.preventDefault();
@@ -183,7 +219,7 @@ const Schedule = () => {
                                 onClick={() => {
                                     setSelectedTime(time);
                                     setSelectedChair(chair);
-                                    openModal('newAppointmentModal', { date, time, chair_number: chair, appointment_type: {code: 'Select'} });
+                                    openModal('newAppointmentModal', { date, time, chair_number: chair, appointment_type: {code: 'Select'}, patient: {id: '', name: 'Select'}, staff: {name: 'Select'}, status: {code: 'Select'}, notes: '', staff: {id: '', name: 'Select'}});
                                 }}
                                 >
                                     {loading ? <Skeleton /> : 
@@ -215,7 +251,7 @@ const Schedule = () => {
                 <NewAppointmentModal
                     isOpen={modal.type === 'newAppointmentModal'}
                     onClose={closeModal}
-                    onSave={saveNewAppointment}
+                    onSave={(savedNewAppointment) => saveNewAppointment(savedNewAppointment)}
                     initialData={{ ...modal.props }}
                 />
             )}

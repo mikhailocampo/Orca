@@ -170,6 +170,8 @@ def update_appointment(appointment_id: int, modified_by: int, update_data: schem
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
     
+    
+    
     try:
         # Freeze the appointment before updating to ledger
         ledger_entry = models.AppointmentLedger(
