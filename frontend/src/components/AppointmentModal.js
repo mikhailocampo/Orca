@@ -15,12 +15,6 @@ const AppointmentModal = ({ isOpen, onClose, onUpdate, initialData }) => {
         }
     }, [isOpen]);
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const updatedAppointment = {}; // Collect form data here
-        onUpdate(updatedAppointment);
-    };
-
     const handleBackdropClick = (event) => {
         if (event.target === event.currentTarget) {
             onClose();
@@ -31,7 +25,7 @@ const AppointmentModal = ({ isOpen, onClose, onUpdate, initialData }) => {
         e.stopPropagation(); // Prevent clicks inside the modal from closing it
     };
 
-    console.log('Received initial data:', initialData);
+    console.log('initialData:', initialData);
 
     return (
         <div 
@@ -46,7 +40,7 @@ const AppointmentModal = ({ isOpen, onClose, onUpdate, initialData }) => {
                 <h2 className="text-lg font-bold">Edit Appointment</h2>
                 <AppointmentForm
                     initialData={initialData}
-                    onSave={handleSubmit}
+                    onSave={onUpdate}
                     onClose={onClose}
                 />
             </div>

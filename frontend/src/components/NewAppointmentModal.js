@@ -39,8 +39,6 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, initialData }) => {
         e.stopPropagation();  // Prevent clicks inside the modal from closing it
     };
 
-    console.log('New Appointment received initial data:', initialData);
-
     return (
         <div 
             className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"

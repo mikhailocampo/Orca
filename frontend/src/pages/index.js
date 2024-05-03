@@ -31,7 +31,6 @@ const Schedule = () => {
 
     const openModal = (type, props = {}) => {
         closeContextMenu(); // Close any open context menu
-        console.log(type, props);
 
         const modalProps = {type, props};
 
@@ -46,6 +45,45 @@ const Schedule = () => {
         console.log('New appointment:', newAppointment);
         closeNewAppointmentModal();
     };
+
+    const saveUpdatedAppointment = (updatedAppointment) => {
+        console.log('Updated appointment:', updatedAppointment);
+        fetch(`http://localhost:8000/v1/appointments/${updatedAppointment.id}/?modified_by=${updatedAppointment.modified_by}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updatedAppointment),
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Appointment updated:', data);
+                closeModal();
+    
+                // Update the appointments state with the updated data
+                setAppointments(prevAppointments => {
+                    const updatedAppointments = prevAppointments.map(appointment => {
+                        if (appointment.id === data.id) {
+                            // Replace with the updated appointment data from server
+                            return {...data};
+                        }
+                        return appointment;
+                    });
+                    return updatedAppointments;
+                });
+
+                fetchAppointmentsForDate(date);
+            })
+            .catch(error => {
+                console.error('There has been a problem with your fetch operation:', error);
+            });
+    };
+    
 
     const handleRightClick = (e, appointmentId) => {
         e.preventDefault();
@@ -121,7 +159,6 @@ const Schedule = () => {
         time.setHours(hours, minutes, 0, 0);
         return time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, hourCycle: 'h12' }).replace(' ', '');
     };
-    
 
     return (
         <div className='overflow-none flex flex-col justify-center items-center select-none' onClick={closeContextMenu}>
@@ -186,7 +223,7 @@ const Schedule = () => {
                 <AppointmentModal
                     isOpen={modal.type === 'appointmentModal'}
                     onClose={closeModal}
-                    onUpdate={(updatedAppointment) => console.log('Updated appointment:', updatedAppointment)}
+                    onUpdate={(updatedAppointment) => saveUpdatedAppointment(updatedAppointment)}
                     initialData={{ ...modal.props.initialData }}
                 />
             )}

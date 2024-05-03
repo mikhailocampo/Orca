@@ -204,4 +204,4 @@ def update_appointment(appointment_id: int, modified_by: int, update_data: schem
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error updating appointment: {e}")
     
-    return {"message": "Appointment updated successfully"}
+    return {"message": "Appointment updated successfully", "changes": update_data.model_dump(exclude_unset=True)}
